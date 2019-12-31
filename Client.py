@@ -12,18 +12,20 @@ port = 55555
 PUBLIC_SERVER_IP = '184.57.188.49'
 PRIVATE_SERVER_IP = '192.168.1.44'
 
+#Check to see if the client is on the same network as the server and use private ip address if true
 ip = req.urlopen('https://v4.ident.me/').read().decode('utf8')
 if ip == PUBLIC_SERVER_IP:
     ip = PRIVATE_SERVER_IP
 
 try:
-    s.connect((ip, port))
+    s.connect(('localhost', port))
 except Exception as e:
     print("Unable to connect to server")
     print(e)
 
     exit(0)
 
+#Thread for listening to what the server sends
 def thread_get_input():
     try:
         while True:
@@ -33,8 +35,6 @@ def thread_get_input():
         print("Unable to recieve message from server")
         return
 
-msg = s.recv(1024)
-print("SERVER> ", msg.decode('ascii'))
 t = threading.Thread(target=thread_get_input, daemon=True)
 t.start()
 
