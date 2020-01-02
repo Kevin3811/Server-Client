@@ -5,6 +5,7 @@ import threading
 from time import gmtime, strftime
 #For getting files from host
 from os import listdir
+import os
 from os.path import isfile, join
 
 #Create socket object
@@ -23,16 +24,16 @@ print("IP: ", socket.gethostbyname(host))
 serversocket.listen(5)
 sockapp_lock = threading.Lock()
 clientsockets = {}
+path = "C:\Parse"
 
 def timeNow():
     return strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
 #Gets all the files in the host directory
 def getFilesInHost():
-    mypath = 'C:\Parse'
     files = []
-    for f in listdir(mypath):
-        if isfile(join(mypath, f)):
+    for f in listdir(path):
+        if isfile(join(path, f)):
             files.append(f)
     return files
 
@@ -46,7 +47,7 @@ def threaded_client(conn, addr, sock):
                 split = data.decode("utf-8").split()
 
                 #Check if the command is getDocs
-                if split[0] == "getDocs":
+                if split[0] == "getFiles":
                     files = getFilesInHost()
                     #Check if there are even any files in the host directory
                     if files is None:
@@ -65,6 +66,21 @@ def threaded_client(conn, addr, sock):
                         conn.send(str(numClients).encode("utf-8"))
                     except Exception as e:
                         print(timeNow(), "- Unable to send number of connections - ", e)
+
+                #Check if the command is deleteFile
+                if split[0] == "deleteFile":
+                    #Make sure that a second argument is provided for the file name
+                    if len(split) < 2:
+                        print("No file provided")
+                        continue
+                    file = split[1]
+                    fullFile = path + "\\" + file
+                    try:
+                        os.remove(fullFile)
+                        print("Removed ", fullFile)
+                    except Exception as e:
+                        print("Unable to remove file: ", file)
+                        print(e)
             else:
                 break
         except:
