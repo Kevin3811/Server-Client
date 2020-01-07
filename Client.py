@@ -65,8 +65,54 @@ t.start()
 try:
     msg = input("%s: " % host)
     while len(msg):
-        s.send(msg.encode('ascii'))
+        #Check the message for the 'upload' command
+        command = msg.split()
+        if command[0] == "upload":
+            #Make sure a file to upload has been specified
+            if len(command) < 2:
+                print("No file specified to upload")
+                msg = input("%s: " % host)
+                continue
+            filename = command[1]
+            #Notify the server by sending flag 'upload {filename}'
+            s.send(f"upload {filename}".encode("utf-8"))
+            fullFile = clientDir + "\\" + filename
+            try:
+                #Open file handle
+                file = open(fullFile, "rb")
+                #Read initial frame of data from file
+                fileData = file.read(1024)
+                while fileData:
+                    s.send(fileData)
+                    fileData = file.read(1024)
+                file.close()
+                response = s.recv(1024)
+                if response.decode("utf-8") == "SUCCESS":
+                    print(f"Successfully uploaded [{filename}] to server")
+                else:
+                    print(f"Server unable to receive file [{filename}]")
+            except Exception as e:
+                print(f"Unable to upload [{filename}] to server")
+                print(e)
+                msg = input("%s: " % host)
+                continue
+
+        else:
+            s.send(msg.encode('ascii'))
         msg = input("%s: " % host)
 except:
     print("Connection closed")
 s.close()
+
+
+
+
+
+
+
+
+
+
+
+
+

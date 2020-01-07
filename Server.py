@@ -81,6 +81,7 @@ def threaded_client(conn, addr, sock):
                     except Exception as e:
                         print("Unable to remove file: ", file)
                         print(e)
+
                 #Check if the command is downloadFile
                 if split[0] == "download":
                     #Make sure a file name is provided to send to client
@@ -110,6 +111,7 @@ def threaded_client(conn, addr, sock):
                         print(f"Unable to send file [{split[2]}] to client")
                         print(e)
                         continue
+
                 #Check if the command is delete
                 if split[0] == "delete":
                     #Make sure that a file has been provided to delete from the server
@@ -124,6 +126,31 @@ def threaded_client(conn, addr, sock):
                         conn.send(f"Successfully deleted file [{filename}]".encode("utf-8"))
                     except Exception as e:
                         print(f"Unable to delete file [{filename}]")
+                        print(e)
+                        continue
+
+                #Check if the command is upload
+                if split[0] == "upload":
+                    if len(split) < 2:
+                        print("No filename to upload provided")
+                        continue
+                    filename = split[1]
+                    fullFile = path + "\\" + filename
+                    try:
+                        with open(fullFile, "wb") as file:
+                            fileData = conn.recv(1024)
+                            while fileData:
+                                file.write(fileData)
+                                #Last frame has been received for file, exit the listening loop
+                                if len(fileData) < 1024:
+                                    break
+                                fileData = conn.recv(1024)
+                        file.close()
+                        print(f"Successfully received file [{filename}]")
+                        conn.send("SUCCESS".encode("utf-8"))
+                    except Exception as e:
+                        conn.send("FAILURE".encode("utf-8"))
+                        print(f"Unable to receive file [{filename}]")
                         print(e)
                         continue
             else:
