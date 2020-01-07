@@ -110,6 +110,22 @@ def threaded_client(conn, addr, sock):
                         print(f"Unable to send file [{split[2]}] to client")
                         print(e)
                         continue
+                #Check if the command is delete
+                if split[0] == "delete":
+                    #Make sure that a file has been provided to delete from the server
+                    if len(split) < 2:
+                        print("No file provided to delete")
+                        continue
+                    filename = split[1]
+                    file = path + "\\" + filename
+                    try:
+                        os.remove(file)
+                        print(f"Successfully delete file [{filename}]")
+                        conn.send(f"Successfully deleted file [{filename}]".encode("utf-8"))
+                    except Exception as e:
+                        print(f"Unable to delete file [{filename}]")
+                        print(e)
+                        continue
             else:
                 break
         except:
@@ -145,6 +161,7 @@ def thread_connection_listener():
 def thread_server_commands():
     while True:
         cmd = input("%s> " % host)
+        #Close the server after disconnecting all clients
         if cmd == "exit":
             sockapp_lock.acquire()
             clients = clientsockets.values()
@@ -154,6 +171,7 @@ def thread_server_commands():
             sockapp_lock.release()
             return
 
+        #Send a message to all clients
         if cmd == "broadcast":
             send_message = input("tell> ")
             for client in clientsockets.values():
@@ -162,6 +180,7 @@ def thread_server_commands():
                 except:
                     print("Unable to send message to client")
 
+        #Close a specified connection
         if cmd == "kick":
             sock = input("IP:PORT to kick> ")
             sockapp_lock.acquire()
@@ -173,6 +192,7 @@ def thread_server_commands():
             conn.close()
             print(timeNow(), "- Kicked - ", sock)
 
+        #Get a list of all the connected clients
         if cmd == "clients":
             clients = clientsockets.keys()
             if len(clients) == 0:

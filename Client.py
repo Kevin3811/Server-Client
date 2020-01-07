@@ -32,6 +32,7 @@ def thread_get_input():
         while True:
             received = s.recv(1024)
             print("SERVER> ", received.decode('ascii'))
+
             #Check to see if a file is being sent from the server by checking the format: SENDING {filename}
             #How the server sends the flag: conn.send(f"SENDING {filename}".encode("utf-8"))
             command = received.decode("utf-8").split()
@@ -40,6 +41,7 @@ def thread_get_input():
                 print(f"Receiving file [{filename}]")
                 #Open new file as write and binary
                 fileLoc = clientDir + "\\" + filename
+                #Open a new file with the specified name for the data that will be received to be stored
                 with open(fileLoc, "wb") as file:
                     fileData = s.recv(1024)
                     while fileData:
@@ -59,6 +61,7 @@ def thread_get_input():
 t = threading.Thread(target=thread_get_input, daemon=True)
 t.start()
 
+#Main thread that's listening for user entered commands
 try:
     msg = input("%s: " % host)
     while len(msg):
