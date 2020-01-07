@@ -24,7 +24,7 @@ print("IP: ", socket.gethostbyname(host))
 serversocket.listen(5)
 sockapp_lock = threading.Lock()
 clientsockets = {}
-path = "C:\Parse"
+path = "C:\\Parse"
 
 def timeNow():
     return strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -81,6 +81,35 @@ def threaded_client(conn, addr, sock):
                     except Exception as e:
                         print("Unable to remove file: ", file)
                         print(e)
+                #Check if the command is downloadFile
+                if split[0] == "download":
+                    #Make sure a file name is provided to send to client
+                    if len(split) < 2:
+                        print("No file provided to download")
+                        continue
+                    #Make sure that the file the client wants to download actually exists in the host directory
+                    files = getFilesInHost()
+                    if split[1] not in files:
+                        print(split[1], " not found in list of host files")
+                        continue
+                    #Try to send the file's data to the client
+                    try:
+                        #Send SENDING {filename}
+                        filename = split[1]
+                        conn.send(f"SENDING {filename}".encode("utf-8"))
+                        #Open file as read and binary
+                        file = open((path + "\\" +filename), "rb")
+                        fileData = file.read(1024)
+                        while fileData:
+                            print("Read file data")
+                            conn.send(fileData)
+                            fileData = file.read(1024)
+                        file.close()
+                        print(f"Sent file [{filename}] to {str(addr)}")
+                    except Exception as e:
+                        print(f"Unable to send file [{split[2]}] to client")
+                        print(e)
+                        continue
             else:
                 break
         except:

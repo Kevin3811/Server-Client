@@ -22,15 +22,36 @@ try:
 except Exception as e:
     print("Unable to connect to server")
     print(e)
-
     exit(0)
+
+clientDir = "C:\\Users\\HILLK2\\Desktop\\Client"
 
 #Thread for listening to what the server sends
 def thread_get_input():
     try:
         while True:
-            recieved = s.recv(200)
-            print("SERVER> ", recieved.decode('ascii'))
+            received = s.recv(1024)
+            print("SERVER> ", received.decode('ascii'))
+            #Check to see if a file is being sent from the server by checking the format: SENDING {filename}
+            #How the server sends the flag: conn.send(f"SENDING {filename}".encode("utf-8"))
+            command = received.decode("utf-8").split()
+            if command[0] == "SENDING":
+                filename = command[1]
+                print(f"Receiving file [{filename}]")
+                #Open new file as write and binary
+                fileLoc = clientDir + "\\" + filename
+                with open(fileLoc, "wb") as file:
+                    fileData = s.recv(1024)
+                    while fileData:
+                        print(f"Received data [{len(fileData)} bytes]")
+                        file.write(fileData)
+                        #If the last chunk of data we received wasn't a full frame, then it was the last one
+                        #and stop listening for more data
+                        if len(fileData) < 1024:
+                            break
+                        fileData = s.recv(1024)
+                file.close()
+                print(f"Successfully downloaded file [{filename}]")
     except:
         print("Unable to recieve message from server")
         return
