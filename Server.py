@@ -24,7 +24,7 @@ print("IP: ", socket.gethostbyname(host))
 serversocket.listen(5)
 sockapp_lock = threading.Lock()
 clientsockets = {}
-path = "C:\\Parse"
+path = "C:\\Users\\Kevin\\Desktop\\Host"
 
 def timeNow():
     return strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -101,6 +101,8 @@ def threaded_client(conn, addr, sock):
                         #Open file as read and binary
                         file = open((path + "\\" +filename), "rb")
                         fileData = file.read(1024)
+                        if not fileData:
+                            conn.send("\0".encode("utf-8"))
                         while fileData:
                             print("Read file data")
                             conn.send(fileData)
@@ -197,15 +199,6 @@ def thread_server_commands():
                 print("Closed connection")
             sockapp_lock.release()
             return
-
-        #Send a message to all clients
-        if cmd == "broadcast":
-            send_message = input("tell> ")
-            for client in clientsockets.values():
-                try:
-                    client.send(send_message.encode('ascii'))
-                except:
-                    print("Unable to send message to client")
 
         #Close a specified connection
         if cmd == "kick":
